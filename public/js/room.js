@@ -697,7 +697,7 @@ audioButt.addEventListener('click', () => {
         audioAllowed = 0;
         audioButt.style.backgroundColor = "#b12c2c";
         if (mystream) {
-            mystream.getTracks().forEach(track => {
+            mystream.getTracks().forEach(track => {   
                 if (track.kind === 'audio') {
                     track.enabled = false;
                     // Capture the audio stream data and emit it to the server
