@@ -53,6 +53,9 @@
                 </div>
             </div>
 
+            <div id="translatedText"></div>
+
+
             <div class="footer">
                 <div class="utils">
 
@@ -66,6 +69,12 @@
                         <i class="fas fa-desktop"></i>
                         <span class="tooltiptext">Share Screen</span>
                     </div>
+
+                    <div class="translation tooltip">
+                        <i class="fas fa-language"></i>
+                        <span class="tooltiptext">Translation</span>
+                    </div>
+
                     <div class="board-icon tooltip">
                         <i class="fas fa-chalkboard"></i>
                         <span class="tooltiptext">Whiteboard</span>
@@ -90,8 +99,7 @@
             <div class="head-title">
 
                 <div class="chats"><i class="fas fa-comment-alt mr-1"></i>Chats</div>
-                <div class="attendies"><i class="fas fa-users mr-1"></i>Attendies</div>
-
+                
 
             </div>
 
@@ -103,6 +111,29 @@
                 <div class="ci-send"><button class="chat-send">Send</button></div>
             </div>
         </div>
+
+        <div id="translationPopup" class="popup">
+            <div class="popup-content">
+                <span class="close">&times;</span>
+                <h2>Select Languages for Translation</h2>
+                <label for="sourceLanguage">Source Language:</label>
+                <select id="sourceLanguage">
+                    <!-- Options for source languages -->
+                    <option value="en" selected>English</option>
+                    <option value="hi">Hindi</option>
+                    <option value="te">Telugu</option>
+                </select>
+                <label for="targetLanguage">Target Language:</label>
+                <select id="targetLanguage">
+                    <!-- Options for target languages -->
+                    <option value="hi">Hindi</option>
+                    <option value="te">Telugu</option>
+                </select>
+                <button id="startTranslation">Start Translation</button>
+                <button id="stopTranslation">Stop Translation</button>
+            </div>
+        </div>
+        
     </div>
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/room.js"></script>

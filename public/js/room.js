@@ -576,20 +576,60 @@ socket.on('remove peer', sid => {
     delete connections[sid];
 })
 
-sendButton.addEventListener('click', () => {
+// sendButton.addEventListener('click', () => {
+//     const msg = messageField.value;
+//     messageField.value = '';
+//     socket.emit('message', msg, username, roomid);
+// })
+sendButton.addEventListener('click', async () => {
     const msg = messageField.value;
     messageField.value = '';
-    socket.emit('message', msg, username, roomid);
-})
+
+    // Translate the message using an external translation API
+    const translatedMsg = await translateMessage(msg, 'en', 'hi'); // Translate from English to French
+
+    // Emit the translated message to the server
+    socket.emit('message', translatedMsg, username, roomid);
+});
+
+async function translateMessage(message, sourceLang, targetLang) {
+    const translationEndpoint = `https://translation.googleapis.com/language/translate/v2?key=AIzaSyCr83LIwD9TuHNI11hlGVq7gBz5oTLhOSg`; // Replace YOUR_API_KEY with your actual API key
+    // Make a POST request to the translation API
+    const response = await fetch(translationEndpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            q: message, // Change 'text' to 'q', as it's the parameter name expected by Google Translate API
+            source: sourceLang,
+            target: targetLang
+        })
+    });
+
+    // Check for successful response
+    if (!response.ok) {
+        throw new Error('Failed to translate message');
+    }
+
+    // Parse the JSON response
+    const data = await response.json();
+
+    // Extract the translated message from the response
+    const translatedMessage = data.data.translations[0].translatedText;
+
+    return translatedMessage;
+}
+
 
 messageField.addEventListener("keyup", function (event) {
     if (event.keyCode === 13) {
         event.preventDefault();
         sendButton.click();
     }
-});
+});  
 
-socket.on('message', (msg, sendername, time) => {
+socket.on('message', (translatedMessage, sendername, time) => {
     chatRoom.scrollTop = chatRoom.scrollHeight;
     chatRoom.innerHTML += `<div class="message">
     <div class="info">
@@ -597,7 +637,7 @@ socket.on('message', (msg, sendername, time) => {
         <div class="time">${time}</div>
     </div>
     <div class="content">
-        ${msg}
+        ${translatedMessage}
     </div>
 </div>`
 });
@@ -645,10 +685,11 @@ videoButt.addEventListener('click', () => {
     }
 })
 
-
+// Add event listener to the microphone button
 audioButt.addEventListener('click', () => {
-
+    // Check if audio is allowed or not
     if (audioAllowed) {
+        // Disable audio tracks and send the audio stream to the server
         for (let key in audioTrackSent) {
             audioTrackSent[key].enabled = false;
         }
@@ -657,16 +698,22 @@ audioButt.addEventListener('click', () => {
         audioButt.style.backgroundColor = "#b12c2c";
         if (mystream) {
             mystream.getTracks().forEach(track => {
-                if (track.kind === 'audio')
+                if (track.kind === 'audio') {
                     track.enabled = false;
-            })
+                    // Capture the audio stream data and emit it to the server
+                    const audioStream = new MediaStream([track]);
+                    console.log('Accessing audio stream:', audioStream);
+                    socket.emit('audio_stream', audioStream);
+                    console.log('Sending audio stream to server...');
+                }
+            });
         }
 
         mymuteicon.style.visibility = 'visible';
 
         socket.emit('action', 'mute');
-    }
-    else {
+    } else {
+        // Enable audio tracks
         for (let key in audioTrackSent) {
             audioTrackSent[key].enabled = true;
         }
@@ -677,14 +724,85 @@ audioButt.addEventListener('click', () => {
             mystream.getTracks().forEach(track => {
                 if (track.kind === 'audio')
                     track.enabled = true;
-            })
+            });
         }
 
         mymuteicon.style.visibility = 'hidden';
 
         socket.emit('action', 'unmute');
     }
-})
+});
+
+
+document.querySelector('.translation').addEventListener('click', function() {
+    document.getElementById('translationPopup').style.display = 'block';
+});
+
+document.querySelector('.close').addEventListener('click', function() {
+    document.getElementById('translationPopup').style.display = 'none';
+});
+
+// When the user clicks on start translation button
+document.getElementById('startTranslation').addEventListener('click', function() {
+    const sourceLanguage = document.getElementById('sourceLanguage').value;
+    const targetLanguage = document.getElementById('targetLanguage').value;
+    
+    console.log('Starting translation...');
+    console.log('Source language:', sourceLanguage);
+    console.log('Target language:', targetLanguage);
+    
+    // Send selected languages to server to start translation
+    socket.emit('startTranslation', { sourceLanguage, targetLanguage });
+});
+
+// When the server sends back the translated text
+socket.on('translatedText', function(translatedText) {
+    // Get the element where you want to display the translated text
+    console.log('Received translated text:', translatedText);
+    const translatedTextElement = document.getElementById('translatedText');
+    
+    // Append the translated text to the element
+    translatedTextElement.innerHTML += `<p>${translatedText}</p>`;
+});
+
+// Listen for audio stream from server
+socket.on('audio_stream', function(audioStream) {
+    console.log('Received audio stream from server:', audioStream);
+    
+    // Process the audio stream (transcribe, translate, etc.)
+    processAudioStream(audioStream);
+});
+
+// Function to process the audio stream
+async function processAudioStream(audioStream) {
+    try {
+        // Convert the audio stream to base64 format
+        const audioBlob = new Blob([audioStream], { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.onload = async function(event) {
+            const audioData = event.target.result.split(',')[1];
+            const audioBytes = window.atob(audioData);
+            const audioArray = new Uint8Array(audioBytes.length);
+            for (let i = 0; i < audioBytes.length; i++) {
+                audioArray[i] = audioBytes.charCodeAt(i);
+            }
+            const audioBuffer = audioArray.buffer;
+
+            // Transcribe audio stream to text using Google Cloud Speech-to-Text API
+            const transcription = await transcribeAudio(audioBuffer);
+
+            // Translate transcribed text to target language using Google Cloud Translation API
+            const translatedText = await translateText(transcription, targetLanguage);
+
+            // Emit the translated text to the server for display
+            socket.emit('translatedText', translatedText);
+        };
+        reader.readAsDataURL(audioBlob);
+    } catch (error) {
+        console.error('Error processing audio stream:', error);
+    }
+}
+
 
 socket.on('action', (msg, sid) => {
     if (msg == 'mute') {

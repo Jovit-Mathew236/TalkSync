@@ -583,6 +583,25 @@ navbar .logo {
   color: white;
   background-color: #393e46;
 }
+
+.container-room .left-cont .footer .utils .translation {
+  background-color: #d8d8d8;
+  text-align: center;
+  margin-left: 10px;
+  color: #393e46;
+  padding: 10px;
+  height: 40px;
+  width: 40px;
+  border-radius: 100px;
+  transition: background-color 0.3s, color 0.3s; /* Combined transition */
+}
+
+.container-room .left-cont .footer .utils .translation:hover {
+  cursor: pointer;
+  color: white;
+  background-color: #393e46;
+}
+
 .container-room .left-cont .footer .utils .board-icon {
   background-color: #d8d8d8;
   text-align: center;
@@ -765,6 +784,41 @@ navbar .logo {
   outline: none;
 }
 
+
+.popup {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.popup-content {
+  text-align: center;
+}
+
+.popup-content select, .popup-content button {
+  margin: 10px;
+}
+
+.popup-content button {
+  padding: 5px 10px;
+  background-color: #4ECCA3;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.popup-content button:hover {
+  background-color: #47a882;
+}
+
 .tooltip {
   position: relative;
   display: inline-block;
@@ -803,5 +857,20 @@ navbar .logo {
   visibility: visible;
   opacity: 0.8;
 }
+
+/* CSS for close button */
+.close {
+  position: absolute;
+  top: 10px; /* Adjust as needed */
+  right: 10px; /* Adjust as needed */
+  cursor: pointer;
+  font-size: 24px;
+  color: #aaa;
+}
+
+.close:hover {
+  color: #000;
+}
+
 
 /*# sourceMappingURL=style.css.map */
